@@ -389,10 +389,222 @@ ChangeVal 함수는 전달받은 인수의 값을 변경하는 함수이다.<br>
 **외부 상태를 변경하지 않고 외부 상태에 의존하지 않는 함수를 "순수 함수"라고 한다.**<br>
 순수 함수를 통해 부수 효과를 최대한 억제하는 프로그래밍 패러다임이 **함수형 프로그래밍**이다.
 
-## 12.7
+## 12.7 다양한 함수의 형태
 ---
 
+### 12.7.1 즉시 실행 함수
+함수 정의와 동시에 즉시 호출되는 함수를 말한다.<br> 
+단 한번만 호출되며 다시 호출 불가능.
 
+```javascript
+// 익명 즉시 실행 함수
+(function () {
+  var a = 3;
+  var b = 5;
+  return a * b;
+}());
+```
+
+즉시 실행 함수는 이와 같이 익명으로 하는 게 일반적이다.
+
+```javascript
+// 기명 즉시 실행 함수
+(function foo() {
+  var a = 3;
+  var b = 5;
+  return a * b;
+}());
+
+foo(); // ReferenceError: foo is not defined
+```
+
+즉시 실행 함수에서도 함수 이름을 명시할 수 있긴 하다.<br> 
+그러나 함수 이름을 명시해도 호출이 불가능한 것은 똑같다.
+
+<br><br>
+
+즉시 실행 함수는 반드시 ()괄호로 감싸야 한다. 그러지 않으면 에러가 발생한다.
+```javascript
+function () { // SyntaxError: Function statements require a function name
+  // ...
+}();
+```
+이는 함수 선언문으로 평가되는데 형식에 맞지 않기 때문이다. (함수 이름 명시해야 함)<br>
+그리고 JS엔진에서 암묵적으로 {} 뒤에 세미콜론을 붙이기 때문에 ()가 에러 발생한다. (함수 이름을 명시해도 에러 발생)
+
+
+## 12.7.2 재귀함수
+---
+함수가 자기 자신을 호출하는 함수를 의미한다.<br>
+반복되는 처리에서 사용된다.
+
+```javascript
+// 팩토리얼(계승)은 1부터 자신까지의 모든 양의 정수의 곱이다.
+// n! = 1 * 2 * ... * (n-1) * n
+function factorial(n) {
+  // 탈출 조건: n이 1 이하일 때 재귀 호출을 멈춘다.
+  if (n <= 1) return 1;
+  // 재귀 호출
+  return n * factorial(n - 1);
+}
+
+console.log(factorial(0)); // 0! = 1
+console.log(factorial(1)); // 1! = 1
+console.log(factorial(2)); // 2! = 2 * 1 = 2
+console.log(factorial(3)); // 3! = 3 * 2 * 1 = 6
+console.log(factorial(4)); // 4! = 4 * 3 * 1 * 1 = 24
+console.log(factorial(5)); // 5! = 5 * 4 * 3 * 2 * 1 = 120
+```
+
+재귀 함수 내부에서 사용되는 factorial는 함수를 가리키는 식별자가 아닌 함수 이름이다.<br>
+함수 내부에선 함수 이름이 유용하므로 처음 사용되는 factorial 식별자과 그 다음에 사용되는 factorial 식별자는 다른 식별자이다.<br>
+
+<br>
+재귀 함수는 자신을 무한번 반복 호출한다. 따라서 탈출 조건을 반드시 만들어야 한다.
+
+## 12.7.3 중첩함수
+---
+함수 내부에 정의된 함수를 중첩 함수 or 내부 함수라고 부른다.<br>
+그리고 중첩 함수를 감싸고 있는 함수를 외부 함수라고 부른다.
+
+```javascript
+function outer() {
+  var x = 1;
+
+  // 중첩 함수
+  function inner() {
+    var y = 2;
+    // 외부 함수의 변수를 참조할 수 있다.
+    console.log(x + y); // 3
+  }
+
+  inner();
+}
+
+outer();
+```
+
+중첩 함수는 이와 같이 외부 함수의 변수를 참조할 수 있다.<br>
+중첨 함수는 스코프와 클로저에 깊은 관련이 있다.<br>
+
+## 12.7.4 콜백 함수
+---
+
+함수의 매개변수를 통해 다른 함수의 내부로 전달되는 함수를 "콜백 함수"라고 부르며 <br>
+매개변수를 통해 콜백 함수를 전달받은 함수를 "고차 함수"라고 부른다. <br>
+
+<br>
+
+```javascript
+// 외부에서 전달받은 f를 n만큼 반복 호출한다
+function repeat(n, f) {
+  for (var i = 0; i < n; i++) {
+    f(i); // i를 전달하면서 f를 호출
+  }
+}
+
+var logAll = function (i) {
+  console.log(i);
+};
+
+// 반복 호출할 함수를 인수로 전달한다.
+repeat(5, logAll); // 0 1 2 3 4
+
+var logOdds = function (i) {
+  if (i % 2) console.log(i);
+};
+
+// 반복 호출할 함수를 인수로 전달한다.
+repeat(5, logOdds); // 1 3
+```
+
+repeat 함수는 콜백 함수를 이용하여 구현하였다.<br>
+이와 같이 구현하면 내부 로직에 강력하게 의존하지 않고 로직의 일부분을 함수로 전달받아 수행하므로 유연한 구조를 갖게 된다.<br>
+
+<br>
+
+이때 콜백 함수가 고차 함수 내부에서만 사용된다면, 익명 함수 리터럴로 정의하면서 바로 전달하는 것이 일반적이다.
+```javascript
+// 익명 함수 리터럴을 콜백 함수로 고차 함수에 전달한다.
+// 익명 함수 리터럴은 repeat 함수를 호출할 때마다 평가되어 함수 객체를 생성한다.
+repeat(5, function (i) {
+  if (i % 2) console.log(i);
+}); // 1 3
+```
+하지만 고차 함수가 호출될 때마다 콜백 함수는 매번 함수 객체를 생성하게 되므로 비효율적인 면이 있다. <br>
+따라서 다른 곳에서 쓰임이 있다면 함수를 사전에 정의하는 것이 좋다. <br>
+
+<br>
+
+**콜백 함수는 비동기 처리 (이벤트 처리, Ajax 통신, 타이머 함수 등)에 활용되는 매우 중요한 패턴이다.**
+```javascript
+// 콜백 함수를 사용한 이벤트 처리
+// myButton 버튼을 클릭하면 콜백 함수를 실행한다.
+document.getElementById('myButton').addEventListener('click', function () {
+  console.log('button clicked!');
+});
+
+// 콜백 함수를 사용한 비동기 처리
+// 1초 후에 메시지를 출력한다.
+setTimeout(function () {
+  console.log('1초 경과');
+}, 1000);
+```
+<br>
+<br>
+
+**또한 콜백 함수는 배열 고차 함수에서도 사용이 된다.**
+```javascript
+// 콜백 함수를 사용하는 고차 함수 map
+var res = [1, 2, 3].map(function (item) {
+  return item * 2;
+});
+
+console.log(res); // [2, 4, 6]
+
+// 콜백 함수를 사용하는 고차 함수 filter
+res = [1, 2, 3].filter(function (item) {
+  return item % 2;
+});
+
+console.log(res); // [1, 3]
+
+// 콜백 함수를 사용하는 고차 함수 reduce
+res = [1, 2, 3].reduce(function (acc, cur) {
+  return acc + cur;
+}, 0);
+
+console.log(res); // 6
+```
+
+## 12.7.5 순수 함수와 비순수 함수
+---
+어떤 외부 상태에 의존하지도 변경하지도 않는 함수를 순수 함수라고 부른다.<br>
+그러지 않는 모든 함수를 비순수 함수라고 부른다.<br>
+
+<br>
+
+>* 외부 상태에 의존하지 않기 때문에 동일한 인수라면 언제나 같은 반환값을 보장한다.<br>
+>* 외부를 변경하지 않기 때문에 인수의 불변성이 보장된다.
+
+```javascript
+var count = 0; // 현재 카운트를 나타내는 상태
+
+// 순수 함수 increase는 동일한 인수가 전달되면 언제나 동일한 값을 반환한다.
+function increase(n) {
+  return ++n;
+}
+
+// 순수 함수가 반환한 결과값을 변수에 재할당해서 상태를 변경
+count = increase(count);
+console.log(count); // 1
+
+count = increase(count);
+console.log(count); // 2
+```
+
+함수형 프로그래밍은 순수 함수와 보조 함수의 조합을 통해 외부 상태 변경을 최소화하여 불변성을 지향하는 프로그래밍 패러다임이다.<br>
+자바스크립트는 멀티 패러다임 언어이므로 객체지향 뿐만 아니라 함수형 프로그래밍도 적극적으로 활용중이다.<br>
 
 
 
